@@ -1,0 +1,42 @@
+Desired Modules:
+- HTTP Parser
+    - gets an HTTP header, returns a struct with critical information from that header
+- Styles handler
+    - handles calls for CSS/JS
+- SELECT
+    - Create a select loop that handles multiple clients simultaneously (maybe upgrade to Threading later if desired)
+- AWS
+    - Get this bad boy running on AWS instead of local machine
+- SSL: 
+    - start running it on Port 443 with a secure connection
+- P A R T I A L M E S S A G E H A N D L I N G
+
+Low Priority
+- Data Sink
+    - start opening a TCP_RAW conneciton and logging all of those connectoin
+- Cache
+
+
+Stage 1:
+
+Create a server that opens Port 80
+
+Serve a basic HTML page to anyone that pings Port 80, disregard message
+
+Stage 2: 
+
+Get the HTTP parser up and running
+ - Have it dynamically serve files based on requested name
+
+Stage 3:
+ - Get that Select Loop up and running
+ - Hanlde multiplexing
+
+Stage 4:
+ - Push it onto AWS
+
+Stage 5:
+ - buy a domain, attach it my AWS Server
+
+Stage 6:
+ - Data Sink
