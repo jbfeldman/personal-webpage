@@ -1,1 +1,1 @@
-gcc server.c -g -Wall -Wextra -o server
+gcc server.c io.c -g -Wall -Wextra -o server
