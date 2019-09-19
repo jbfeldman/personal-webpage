@@ -10,8 +10,25 @@
 #include <string.h>
 #include <errno.h>
 
-struct HTTP_request;
-struct HTTP_response;
+// struct HTTP_request;
+// struct HTTP_response;
+
+struct HTTP_request{
+
+    char *type; //GET, POST, PULL, etc
+    char *url; //relative URL path
+    char *host;
+    /*char* conncetion;
+    char *cache_control;
+    char *user_agent; */
+};
+struct HTTP_response{
+    char *status;
+    /*char *date;
+    char *server;
+    char *content_length; */
+};
+
 
 
 /*

@@ -17,17 +17,17 @@ int main (int argc, char** argv){
     if (argc < 2){
         error("please specify filename(s) to read sample HTTP header from");
     }
-    for (int i = 1; i < argc, i++){
+    for (int i = 1; i < argc; i++){
         FILE *fp = fopen(argv[i], "rb");
         if (fp == NULL){
-            fprintf(stderr, "failed to open file \"%s\", it probably doesn't exist\n", );
+            fprintf(stderr, "failed to open file \"%s\", it probably doesn't exist\n", argv[i]);
         }
         fseek(fp, 0, SEEK_END);
-        long fsize = ftell(f);
+        long fsize = ftell(fp);
         fseek(fp, 0, SEEK_SET);  /* same as rewind(f); */
 
         char buf[fsize];
-        fread(string, 1, fsize, fp);
+        fread(buf, 1, fsize, fp);
         struct HTTP_request* header = parse_request(buf, fsize);
         fclose(fp);
 
