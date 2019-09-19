@@ -9,9 +9,15 @@
 #include <netdb.h> 
 
 #define DEFAULT_PORT_NO 80
+#define DISCONNECT_CODE -69
+#define DEFAULT_BUFFER_SIZE 10000
+#define REQUEST_LOG "request-log.txt"
+
 int initialize_listening_sock(int portno);
 void write_response(/*char* fname,*/ int socket);
-int accept_connection(lSock);
+int accept_connection(int lSock);
+int process_request(int sockfd);
+void write_request_to_file(char* buf, int n);
 
 
 //TODO: function out all of the lines relevant to accepting a connection
@@ -20,17 +26,19 @@ int accept_connection(lSock);
 
 
 int main(int arg, char** argv){
-    int lSock, maxSock, rv, newSock = -1;
+    int lSock, maxSock, rv, newSock = -1, status = 0;
 
     struct timeval tv;
     tv.tv_sec=1;
     tv.tv_usec=1000;
     fd_set masterFDSet, copyFDSet;
+
+    lSock = initialize_listening_sock(DEFAULT_PORT_NO);
+
     FD_ZERO(&masterFDSet);
     FD_ZERO(&copyFDSet);
     FD_SET(lSock, &masterFDSet);
 
-    lSock = initialize_listening_sock(DEFAULT_PORT_NO);
     maxSock = lSock;
 
     while (1){
@@ -49,6 +57,7 @@ int main(int arg, char** argv){
                     if (sockfd == lSock){
                         newSock = accept_connection(lSock);
                         if (newSock > 0){
+                            fprintf(stderr, "there's a new connection in town\n" );
                             FD_SET(newSock, &masterFDSet);
                             maxSock = (newSock > maxSock) ? newSock: maxSock;
                             //add to sockArray
@@ -56,11 +65,16 @@ int main(int arg, char** argv){
                         
                     }
                     else{
-                        write_response(sockfd);
-                        if (status == DISCONNECT_CODE || 1 /*delete the or 1, rn always disconnects client */){
+                        fprintf(stderr, "message from existing connection\n" );
+
+                        status = process_request(sockfd);
+                        /* status = check connection()*/
+                        
+
+                        if (status == DISCONNECT_CODE ){
                             //TODO: write a disconnect function
                             close(sockfd);
-                            FD_CLR(sockfd, masterFDSet);
+                            FD_CLR(sockfd, &masterFDSet);
                             
                             
                         }
@@ -120,11 +134,49 @@ void write_response(/*char* fname,*/int socket){
  * Args: listening socket file descriptor
  * Returns: socket file descriptor for new client
  */
-int accept_connection(lSock){
+int accept_connection(int lSock){
     struct sockaddr_in cli_addr;
     socklen_t clilen;
     clilen = sizeof(cli_addr);
 
     return accept(lSock, (struct sockaddr *) &cli_addr,  &clilen);
+
+}
+
+/*
+ * Reads in a message from the client, processes it, and returns a status code
+ * Only argument is the socket file descriptor
+ * TODO: Make the buffer size dynamic instead of just 10k static bytes
+*/
+int process_request(int sockfd){
+    int n = 0;
+    char buf[DEFAULT_BUFFER_SIZE];
+    bzero(buf, DEFAULT_BUFFER_SIZE);
+
+    n = read (sockfd, buf, DEFAULT_BUFFER_SIZE);
+    fprintf(stderr, "%d bytes read from client\n", n);
+    if (n < 0) perror("error reading from socket");
+
+    write_request_to_file(buf, n);
+
+
+
+    write_response(sockfd);
+    return DISCONNECT_CODE;
+}
+
+/*
+ * Purpose: Writes the request (usually HTTP) from server to a file
+ * Args: The buffer containing the message and its length
+ * No Return value
+ * TODO: instead of perroring, maybe just have it return a disconnect code
+ */
+void write_request_to_file(char* buf, int n)
+{
+    FILE *fp = fopen(REQUEST_LOG, "a");
+    if (fp == NULL) perror("error opening REQUEST_LOG");
+    if (fwrite(buf, n, 1, fp) != 1) perror("error writing to REQUEST_LOG");
+    fclose(fp);
+
 
 }
