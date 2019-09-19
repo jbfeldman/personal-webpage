@@ -1,0 +1,1 @@
+gcc HTTP-test.c io.c HTTP-parser.c -Wall -Wextra -o parser
