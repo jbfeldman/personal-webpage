@@ -8,6 +8,7 @@
 #include <netinet/in.h>
 #include <netdb.h> 
 #include "io.h"
+#include "HTTP-parser.h"
 
 #define DEFAULT_PORT_NO 80
 #define DISCONNECT_CODE -69
@@ -16,7 +17,6 @@
 #define ERROR_LOG "logging/error-log.txt"
 #define INDEX_FILE "public/index.html"
 
-void write_response(/*char* fname,*/ int socket);
 int accept_connection(int lSock);
 int process_request(int sockfd);
 void write_request_to_file(char* buf, int n);
@@ -92,22 +92,6 @@ int main(int arg, char** argv){
 
 }
 
-
-/* Purpose: writes the response to the client, will need major reworking
- * Args: fname of the file to be returned, and socket file descriptor to write to
- */
-
-void write_response(/*char* fname,*/int socket){
-    char *response = "This is the sample response string, here ye here ye";
-    int n = write(socket, response, strlen(response));
-    if (n < 0){
-        error("error writing to socket");
-    }
-    else{
-        fprintf(stderr, "wrote message of %d bytes\n", n);
-    }
-
-}
 
 /* Purpose: To accept an incoming connection from a new client
  * Args: listening socket file descriptor
