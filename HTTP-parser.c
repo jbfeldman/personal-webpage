@@ -1,7 +1,9 @@
 #include "HTTP-parser.h"
 
 struct HTTP_request{
-    char *get;
+
+    char *type; //GET, POST, PULL, etc
+    char *url; //relative URL path
     char *host;
     /*char* conncetion;
     char *cache_control;
