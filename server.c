@@ -7,13 +7,14 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h> 
+#include "io.h"
 
 #define DEFAULT_PORT_NO 80
 #define DISCONNECT_CODE -69
 #define DEFAULT_BUFFER_SIZE 10000
 #define REQUEST_LOG "request-log.txt"
+#define INDEX_FILE "public/index.html"
 
-int initialize_listening_sock(int portno);
 void write_response(/*char* fname,*/ int socket);
 int accept_connection(int lSock);
 int process_request(int sockfd);
@@ -33,7 +34,7 @@ int main(int arg, char** argv){
     tv.tv_usec=1000;
     fd_set masterFDSet, copyFDSet;
 
-    lSock = initialize_listening_sock(DEFAULT_PORT_NO);
+    lSock = open_and_bind_socket(DEFAULT_PORT_NO);
 
     FD_ZERO(&masterFDSet);
     FD_ZERO(&copyFDSet);
@@ -47,7 +48,7 @@ int main(int arg, char** argv){
         rv = select (maxSock + 1, &copyFDSet, NULL, NULL, &tv);
    
         if (rv == -1)
-            perror("Select");
+            error("Select");
         else if (rv ==0)
             ;
         else{
@@ -68,7 +69,6 @@ int main(int arg, char** argv){
                         fprintf(stderr, "message from existing connection\n" );
 
                         status = process_request(sockfd);
-                        /* status = check connection()*/
                         
 
                         if (status == DISCONNECT_CODE ){
@@ -91,28 +91,6 @@ int main(int arg, char** argv){
 
 }
 
-/* Purpose: intialize the server socket and bind it to a portno
- * Args: Portno, the port number that will be bound to (will almost always be 80)
- * Returns: the socket file descriptor of the listening socket
- */
-int initialize_listening_sock(int portno){
-    int sockfd;
-    
-    
-    struct sockaddr_in serv_addr;
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) 
-       perror("ERROR opening socket");
-    bzero((char *) &serv_addr, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = INADDR_ANY;
-    serv_addr.sin_port = htons(portno);
-    if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) 
-             perror("ERROR on binding");
-    listen(sockfd,5);
-    return sockfd;
-
-}
 
 /* Purpose: writes the response to the client, will need major reworking
  * Args: fname of the file to be returned, and socket file descriptor to write to
@@ -122,7 +100,7 @@ void write_response(/*char* fname,*/int socket){
     char *response = "This is the sample response string, here ye here ye";
     int n = write(socket, response, strlen(response));
     if (n < 0){
-        perror("error writing to socket");
+        error("error writing to socket");
     }
     else{
         fprintf(stderr, "wrote message of %d bytes\n", n);
@@ -147,6 +125,7 @@ int accept_connection(int lSock){
  * Reads in a message from the client, processes it, and returns a status code
  * Only argument is the socket file descriptor
  * TODO: Make the buffer size dynamic instead of just 10k static bytes
+ * TODO: split this into functions: Read request, determine response, do response
 */
 int process_request(int sockfd){
     int n = 0;
@@ -155,13 +134,13 @@ int process_request(int sockfd){
 
     n = read (sockfd, buf, DEFAULT_BUFFER_SIZE);
     fprintf(stderr, "%d bytes read from client\n", n);
-    if (n < 0) perror("error reading from socket");
+    if (n < 0) error("error reading from socket");
 
     write_request_to_file(buf, n);
 
+   
 
-
-    write_response(sockfd);
+    write_file(sockfd, INDEX_FILE);
     return DISCONNECT_CODE;
 }
 
@@ -169,13 +148,13 @@ int process_request(int sockfd){
  * Purpose: Writes the request (usually HTTP) from server to a file
  * Args: The buffer containing the message and its length
  * No Return value
- * TODO: instead of perroring, maybe just have it return a disconnect code
+ * TODO: instead of erroring, maybe just have it return a disconnect code
  */
 void write_request_to_file(char* buf, int n)
 {
     FILE *fp = fopen(REQUEST_LOG, "a");
-    if (fp == NULL) perror("error opening REQUEST_LOG");
-    if (fwrite(buf, n, 1, fp) != 1) perror("error writing to REQUEST_LOG");
+    if (fp == NULL) error("error opening REQUEST_LOG");
+    if (fwrite(buf, n, 1, fp) != 1) error("error writing to REQUEST_LOG");
     fclose(fp);
 
 
