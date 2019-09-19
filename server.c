@@ -12,7 +12,8 @@
 #define DEFAULT_PORT_NO 80
 #define DISCONNECT_CODE -69
 #define DEFAULT_BUFFER_SIZE 10000
-#define REQUEST_LOG "request-log.txt"
+#define REQUEST_LOG "logging/request-log.txt"
+#define ERROR_LOG "logging/error-log.txt"
 #define INDEX_FILE "public/index.html"
 
 void write_response(/*char* fname,*/ int socket);
