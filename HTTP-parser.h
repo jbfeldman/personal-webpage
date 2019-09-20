@@ -20,7 +20,9 @@ struct HTTP_request{
     char *host;
     /*char* conncetion;
     char *cache_control;
-    char *user_agent; */
+    char *user_agent; 
+    char* data; //for the body if we migrate to post requests*/
+
 };
 struct HTTP_response{
     char *status;
@@ -36,7 +38,7 @@ struct HTTP_response{
  * Args: Buffer containing the request, and the length of the request
  * Returns: a struct containing the HTTP-request information
  */
-struct HTTP_request* parse_request(char* buffer, int n);
+struct HTTP_request* parse_request(char* buffer);
 
 /*
  * Purpose: creates an HTTP response string from an HTTP_response struct
