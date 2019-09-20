@@ -28,7 +28,7 @@ int main (int argc, char** argv){
 
         char buf[fsize];
         fread(buf, 1, fsize, fp);
-        struct HTTP_request* header = parse_request(buf, fsize);
+        struct HTTP_request* header = parse_request(buf);
         fclose(fp);
 
         fprintf(stderr, "in main, type is \"%s\"\n", header->type);
