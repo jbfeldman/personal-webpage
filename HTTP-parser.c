@@ -1,7 +1,13 @@
 #include "HTTP-parser.h"
 
+#define HTTP_endl "\r\n"
+#define initial_response_length 100
+
 void get_first_line (struct HTTP_request* header, char *buffer);
 void get_field(char **field, char *field_string, char *buffer);
+int  add_status( char *status, char **buffer, int *buf_position, int buf_len);
+int  add_field(char *field_type, char* field_content, char **buffer, int *buf_position, int buf_len);
+int  add_endl(char** buffer, int *buf_position, int buf_len);
 
 struct HTTP_request* parse_request(char* buffer){
     struct HTTP_request* header = malloc(sizeof(struct HTTP_request));
@@ -13,11 +19,71 @@ struct HTTP_request* parse_request(char* buffer){
     return header;
 }
 int make_HTTP_response_header(struct HTTP_response response_header, char** buffer){
+    char *response_string = calloc(initial_response_length, 1);
+    int &buf_position;
+    int buf_len = initial_response_length;
+    *buf_position = 0;
+    //edge case out adding first line, the stat
+    initial_response_length = add_status(response_header.status, buffer, buf_position, initial_response_length);
+    /* add_field("something", response_header.some_field,buffer,  buf_positiion, buf_len);
+    add_field("something", response_header.some_field,buffer,  buf_positiion, buf_len);
+    */
+    return add_endl(buffer, buf_positiion, buf_len);
     return 0;
 }
 void free_HTTP_request(struct HTTP_request* request){
     ;
 }
+
+/*
+ * Purpose: adds the first line of the HTTP response header, the status code
+ * Args: 
+ *      status: a string containing the status code and response
+ *      buffer: a pointer to the HTTP response string
+ *      buf_position: a pointer to the value containing the current length
+ *                    of the HTTP-response string. Should always start at 0.  Will be modified
+ *                    to reflect new length at the end of function
+ *      buf_len: the maximum length of the buffer
+ * Returns: The maximum length of the buffer, which will be equal to or greater
+            than the argument buf_len
+ */
+int  add_status( char *status, char **buffer, int *buf_position, int buf_len){
+    ;
+}
+
+/*
+ * Purpose: adds a line to the HTTP response header
+ * Args: 
+ *      field_type: a string containing the type of field (content-length, DATE, etc.) that we will be adding
+ *      field-content: a string containing the value of this field
+ *      buffer: a pointer to the HTTP response string
+ *      buf_position: a pointer to the value containing the current length
+ *                    of the HTTP-response string. should be > 0.  Will be modified
+ *                    to reflect new length at the end of function
+ *      buf_len: the maximum length of the buffer
+ * Returns: The maximum length of the buffer, which will be equal to or greater
+            than the argument buf_len
+ */
+int  add_field(char *field_type, char* field_content, char **buffer, int *buf_position, int buf_len){
+    ;
+}
+
+/*
+ * Purpose: adds an HTTP endline, "\r\n"
+ * Args: 
+ *      buffer: a pointer to the HTTP response string
+ *      buf_position: a pointer to the value containing the current length
+ *                    of the HTTP-response string. should be > 0.  Will be modified
+ *                    to reflect new length at the end of function by iterating by 2
+ *      buf_len: the maximum length of the buffer
+ * Returns: The maximum length of the buffer, which will be equal to or greater
+            than the argument buf_len
+ */
+
+int  add_endl(char** buffer, int *buf_position, int buf_len){
+    ;
+}
+
 
 
 
