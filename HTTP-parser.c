@@ -20,15 +20,15 @@ struct HTTP_request* parse_request(char* buffer){
 }
 int make_HTTP_response_header(struct HTTP_response response_header, char** buffer){
     char *response_string = calloc(initial_response_length, 1);
-    int &buf_position;
+    int *buf_position;
     int buf_len = initial_response_length;
     *buf_position = 0;
     //edge case out adding first line, the stat
-    initial_response_length = add_status(response_header.status, buffer, buf_position, initial_response_length);
-    /* add_field("something", response_header.some_field,buffer,  buf_positiion, buf_len);
-    add_field("something", response_header.some_field,buffer,  buf_positiion, buf_len);
+    buf_len = add_status(response_header.status, buffer, buf_position, initial_response_length);
+    /* add_field("something", response_header.some_field,buffer,  buf_position, buf_len);
+    add_field("something", response_header.some_field,buffer,  buf_position, buf_len);
     */
-    return add_endl(buffer, buf_positiion, buf_len);
+    return add_endl(buffer, buf_position, buf_len);
     return 0;
 }
 void free_HTTP_request(struct HTTP_request* request){
