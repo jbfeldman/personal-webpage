@@ -120,8 +120,10 @@ int process_request(int sockfd){
     n = read (sockfd, buf, DEFAULT_BUFFER_SIZE);
     fprintf(stderr, "%d bytes read from client\n", n);
     if (n < 0) error("error reading from socket");
-    //struct HTTP_request* header = parse_request(buf, n);
-
+    struct HTTP_request* header = parse_request(buf);
+    fprintf(stderr, "request type is \"%s\"\n", header->type);
+    fprintf(stderr, "request url is \"%s\"\n", header->url);
+    fprintf(stderr, "request host is \"%s\"\n", header->host);
 
     write_request_to_file(buf, n);
 
