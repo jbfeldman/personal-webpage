@@ -15,16 +15,24 @@
 #define DEFAULT_BUFFER_SIZE 10000
 #define REQUEST_LOG "logging/request-log.txt"
 #define ERROR_LOG "logging/error-log.txt"
+#define PUBLIC_FOLDER "public"
 #define INDEX_FILE "public/index.html"
+#define GET "GET"
+#define MAX_FNAME_SIZE 100
 
 int accept_connection(int lSock);
 int process_request(int sockfd);
 void write_request_to_file(char* buf, int n);
+void send_response(struct HTTP_request* header, /*char *params,*/ int sockfd);
 
 
 //TODO: function out all of the lines relevant to accepting a connection
     // TODO: open index.html
     // TODO: write line by line
+//TODO: rename io.h/.c to socket-io.c/.h, and create new files called HTTP-io.c/.h that
+//      will handle and abstract away receiving and sending HTTP requests/responses
+//TODO: Everytime you use write_file or write_message, make sure to error check
+//TODO: probably should create files "APIs.c" and APIs.h
 
 
 int main(int arg, char** argv){
@@ -74,6 +82,7 @@ int main(int arg, char** argv){
 
                         if (status == DISCONNECT_CODE ){
                             //TODO: write a disconnect function
+                            fprintf(stderr, "disconnecting client\n" );
                             close(sockfd);
                             FD_CLR(sockfd, &masterFDSet);
                             
@@ -120,19 +129,77 @@ int process_request(int sockfd){
     n = read (sockfd, buf, DEFAULT_BUFFER_SIZE);
     fprintf(stderr, "%d bytes read from client\n", n);
     if (n < 0) error("error reading from socket");
+    if (n == 0) return DISCONNECT_CODE;
     struct HTTP_request* header = parse_request(buf);
+    //TODO: if header == NULL, send back "invalid request" error
     fprintf(stderr, "request type is \"%s\"\n", header->type);
     fprintf(stderr, "request url is \"%s\"\n", header->url);
     fprintf(stderr, "request host is \"%s\"\n", header->host);
 
     write_request_to_file(buf, n);
 
+    send_response(header, /*char *params,*/ sockfd);
    
 
-    write_file(sockfd, INDEX_FILE);
+    //write_file(sockfd, INDEX_FILE);
     return DISCONNECT_CODE;
 }
 
+/* 
+ * Purpose: determines what type of response is appropiate for given request and
+ *          sends that response
+ *  Args: 
+ *       header: the HTTP header struct
+ *       params (TODO: not yet implemented): the HTTP paramaters for 
+ *       sockfd: socket file descriptor that will be used to write to client
+*/
+//TODO: write a function for each possible HTTP request type: GET, POST, etc.
+//TODO: before sending out a response, should always have "write_header()" function
+void send_response(struct HTTP_request* header, /*char *params,*/ int sockfd){
+    fprintf(stderr, "in send_resposne\n" );
+    if (header == NULL || header->type == NULL || header->url == NULL || header->host == NULL){
+        char *response = "improperly formatted request";
+        fprintf(stderr, "%s\n", response);
+        write_message(sockfd, response, strlen(response) + 1);
+
+    }
+    if (strcmp(header->type, GET) == 0){
+        //edge case out index file
+        if (strcmp(header->url, "/") == 0 ){
+            //write_header();
+            fprintf(stderr, "wrote index file back\n");
+            write_file(sockfd, INDEX_FILE);
+            return;
+        }
+
+        //TODO: function this out to construct_filepath
+        int fpath_len = MAX_FNAME_SIZE + strlen(PUBLIC_FOLDER) + 1;
+        char filepath[fpath_len + 1];
+        bzero(filepath, fpath_len + 1);
+        strncpy(filepath, PUBLIC_FOLDER, strlen(PUBLIC_FOLDER));
+
+        //should always leave final byte of buffer as null byte
+        strncpy(&(filepath[strlen(PUBLIC_FOLDER)]), header->url, fpath_len - strlen(PUBLIC_FOLDER));
+
+        fprintf(stderr, "filepath is %s\n", filepath);
+
+        if( access( filepath, F_OK ) == -1 ){
+
+            //TODO: replace this error message with a proper error response
+            fprintf(stderr, "wrote back 404 error\n" );
+            write_message(sockfd, "404", 4);
+            return;
+        } 
+        write_file(sockfd, filepath);
+        fprintf(stderr, "wrote back file %s\n", filepath );
+        return;
+        
+
+        //do stuff
+    }
+    //TODO: else if POST, PUT, DELETE
+    
+}
 /*
  * Purpose: Writes the request (usually HTTP) from server to a file
  * Args: The buffer containing the message and its length
