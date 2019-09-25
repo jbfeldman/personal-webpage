@@ -140,7 +140,7 @@ int process_request(int sockfd){
 
     send_response(header, /*char *params,*/ sockfd);
    
-
+    free_HTTP_request(header);
     //write_file(sockfd, INDEX_FILE);
     return DISCONNECT_CODE;
 }

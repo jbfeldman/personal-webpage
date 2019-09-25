@@ -31,8 +31,16 @@ int make_HTTP_response_header(struct HTTP_response response_header, char** buffe
     return add_endl(buffer, buf_position, buf_len);
     return 0;
 }
+
+/*frees all memory associated with an HTTP_request. Will have a runtime error
+ * if any struct members are not allocated OR NULL 
+ */
 void free_HTTP_request(struct HTTP_request* request){
-    ;
+    free(request->type);
+    free(request->url);
+    free(request->host);
+    free(request);
+    
 }
 
 /*
