@@ -14,7 +14,7 @@
 
 
 int main (int argc, char** argv){
-    if (argc < 2){
+    /*if (argc < 2){
         error("please specify filename(s) to read sample HTTP header from");
     }
     for (int i = 1; i < argc; i++){
@@ -24,7 +24,7 @@ int main (int argc, char** argv){
         }
         fseek(fp, 0, SEEK_END);
         long fsize = ftell(fp);
-        fseek(fp, 0, SEEK_SET);  /* same as rewind(f); */
+        fseek(fp, 0, SEEK_SET);  // same as rewind(f); 
 
         char buf[fsize];
         fread(buf, 1, fsize, fp);
@@ -35,7 +35,25 @@ int main (int argc, char** argv){
         fprintf(stderr, "in main, url is \"%s\"\n", header->url);
         fprintf(stderr, "in main, host is \"%s\"\n", header->host);
 
-    }
+    }*/
+
+    struct HTTP_response header = 
+    {
+        .status = "200 OK",
+        .date = "today",
+        .server = "Jonah's homemade spice",
+        .content_length = "We'll figure this out later"
+
+    };
+
+    char *buffer = NULL;
+    char **buf_ptr = &buffer;
+    fprintf(stderr, "at the very beginning, the buffer points is %p and it points to %p\n", buf_ptr, *buf_ptr);
+    int n = make_HTTP_response_header(header, buf_ptr);
+    buffer = *buf_ptr;
+    fprintf(stderr, "header length is %d\n",n );
+    fprintf(stderr, "FULL HEADER \n\n%sTEXTEXTTEXT", buffer);
+    free(buffer);
 
     return 0;
 }

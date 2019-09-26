@@ -26,9 +26,9 @@ struct HTTP_request{
 };
 struct HTTP_response{
     char *status;
-    /*char *date;
+    char *date;
     char *server;
-    char *content_length; */
+    char *content_length; 
 };
 
 

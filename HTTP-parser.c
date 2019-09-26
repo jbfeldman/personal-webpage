@@ -1,13 +1,15 @@
 #include "HTTP-parser.h"
 
-#define HTTP_endl "\r\n"
-#define initial_response_length 100
+#define HTTP_ENDL "\r\n"
+#define INITIAL_RESPONSE_LENGTH 100
 
 void get_first_line (struct HTTP_request* header, char *buffer);
 void get_field(char **field, char *field_string, char *buffer);
-int  add_status( char *status, char **buffer, int *buf_position, int buf_len);
-int  add_field(char *field_type, char* field_content, char **buffer, int *buf_position, int buf_len);
+int  add_status( char *status, char **buf_ptr, int *buf_position, int buf_len);
+int  add_field(char *field_type, char* field_content, char **buf_ptr, int *buf_position, int buf_len);
 int  add_endl(char** buffer, int *buf_position, int buf_len);
+
+//TODO: maybe make add_status and add_endl the same function with an arg for what to add
 
 struct HTTP_request* parse_request(char* buffer){
     struct HTTP_request* header = malloc(sizeof(struct HTTP_request));
@@ -19,22 +21,18 @@ struct HTTP_request* parse_request(char* buffer){
     return header;
 }
 int make_HTTP_response_header(struct HTTP_response response_header, char** buffer){
-    char *response_string = calloc(initial_response_length, 1);
-    int *buf_position;
-    int buf_len = initial_response_length;
-    *buf_position = 0;
+    *buffer = calloc(INITIAL_RESPONSE_LENGTH, 1);
+    int buf_position = 0;
+    int buf_len = INITIAL_RESPONSE_LENGTH;
     //edge case out adding first line, the stat
-    buf_len = add_status(response_header.status, buffer, buf_position, initial_response_length);
-    /* add_field("something", response_header.some_field,buffer,  buf_position, buf_len);
-    add_field("something", response_header.some_field,buffer,  buf_position, buf_len);
+    buf_len = add_status(response_header.status, buffer, &buf_position, INITIAL_RESPONSE_LENGTH);
+
+    add_field("Server", response_header.server ,buffer,  &buf_position, buf_len);
+    /*add_field("something", response_header.some_field,buffer,  &buf_position, buf_len);
     */
-    return add_endl(buffer, buf_position, buf_len);
-    return 0;
+    return add_endl(buffer, &buf_position, buf_len);
 }
 
-/*frees all memory associated with an HTTP_request. Will have a runtime error
- * if any struct members are not allocated OR NULL 
- */
 void free_HTTP_request(struct HTTP_request* request){
     free(request->type);
     free(request->url);
@@ -55,8 +53,19 @@ void free_HTTP_request(struct HTTP_request* request){
  * Returns: The maximum length of the buffer, which will be equal to or greater
             than the argument buf_len
  */
-int  add_status( char *status, char **buffer, int *buf_position, int buf_len){
-    ;
+int  add_status( char *status, char **buf_ptr, int *buf_position, int buf_len){
+
+    //if not enough space in the buffer, double its size
+    if (strlen(status) > buf_len - *buf_position){
+        *buf_ptr = realloc(*buf_ptr, buf_len * 2);
+        bzero(buf_ptr[buf_len], buf_len);
+        buf_len = buf_len * 2;
+    }
+
+    char* buffer = *buf_ptr;
+    strcpy(&(buffer[*buf_position]), status);
+    *buf_position += strlen(status);
+    return add_endl(buf_ptr, buf_position, buf_len);
 }
 
 /*
@@ -72,8 +81,26 @@ int  add_status( char *status, char **buffer, int *buf_position, int buf_len){
  * Returns: The maximum length of the buffer, which will be equal to or greater
             than the argument buf_len
  */
-int  add_field(char *field_type, char* field_content, char **buffer, int *buf_position, int buf_len){
-    ;
+int  add_field(char *field_type, char* field_content, char **buf_ptr, int *buf_position, int buf_len){
+    
+    char* seperator = ": ";
+    //if not enough space in the buffer, double its size
+    if (strlen(field_type) + strlen(field_content) + strlen(seperator) > buf_len - *buf_position){
+        *buf_ptr = realloc(*buf_ptr, buf_len * 2);
+        bzero(buf_ptr[buf_len], buf_len);
+        buf_len = buf_len * 2;
+    }
+
+    char* buffer = *buf_ptr;
+    strcpy(&(buffer[*buf_position]), field_type);
+    *buf_position += strlen(field_type);
+    strcpy(&(buffer[*buf_position]), seperator);
+    *buf_position += strlen(seperator);
+    strcpy(&(buffer[*buf_position]), field_content);
+    *buf_position += strlen(field_content);
+    return add_endl(buf_ptr, buf_position, buf_len);;
+
+
 }
 
 /*
@@ -88,8 +115,24 @@ int  add_field(char *field_type, char* field_content, char **buffer, int *buf_po
             than the argument buf_len
  */
 
-int  add_endl(char** buffer, int *buf_position, int buf_len){
-    ;
+int  add_endl(char** buf_ptr, int *buf_position, int buf_len){
+
+    if (strlen(HTTP_ENDL) > buf_len - *buf_position){
+        *buf_ptr = realloc(*buf_ptr, buf_len * 2);
+        bzero(buf_ptr[buf_len], buf_len);
+        buf_len = buf_len * 2;
+    }
+
+    char* buffer = *buf_ptr;
+    fprintf(stderr, "in endl, the buffer is %s\n", buffer);
+    fprintf(stderr, "the *buf_position is %d\n", *buf_position);
+    fprintf(stderr, "the buf_len is %d\n", buf_len);
+
+    
+    strcpy(&(buffer[*buf_position]), HTTP_ENDL);
+    *buf_position += strlen(HTTP_ENDL);
+    return buf_len;
+    
 }
 
 
