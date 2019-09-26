@@ -7,7 +7,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h> 
-#include "io.h"
+#include "socket-io.h"
 #include "HTTP-parser.h"
 
 #define DEFAULT_PORT_NO 80
@@ -141,7 +141,6 @@ int process_request(int sockfd){
     send_response(header, /*char *params,*/ sockfd);
    
     free_HTTP_request(header);
-    //write_file(sockfd, INDEX_FILE);
     return DISCONNECT_CODE;
 }
 
@@ -156,7 +155,6 @@ int process_request(int sockfd){
 //TODO: write a function for each possible HTTP request type: GET, POST, etc.
 //TODO: before sending out a response, should always have "write_header()" function
 void send_response(struct HTTP_request* header, /*char *params,*/ int sockfd){
-    fprintf(stderr, "in send_resposne\n" );
     if (header == NULL || header->type == NULL || header->url == NULL || header->host == NULL){
         char *response = "improperly formatted request";
         fprintf(stderr, "%s\n", response);
