@@ -7,23 +7,17 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h> 
-#include "socket-io.h"
-#include "HTTP-parser.h"
+#include "HTTP-io.h"
 
 #define DEFAULT_PORT_NO 80
 #define DISCONNECT_CODE -69
 #define DEFAULT_BUFFER_SIZE 10000
 #define REQUEST_LOG "logging/request-log.txt"
 #define ERROR_LOG "logging/error-log.txt"
-#define PUBLIC_FOLDER "public"
-#define INDEX_FILE "public/index.html"
-#define GET "GET"
-#define MAX_FNAME_SIZE 100
 
 int accept_connection(int lSock);
-int process_request(int sockfd);
-void write_request_to_file(char* buf, int n);
-void send_response(struct HTTP_request* header, /*char *params,*/ int sockfd);
+int read_and_process(int sockfd);
+void write_request_to_file(char* buf, int n);process_and_send_response(struct HTTP_request* header, /*char *params,*/ int sockfd);
 
 
 //TODO: function out all of the lines relevant to accepting a connection
@@ -32,7 +26,6 @@ void send_response(struct HTTP_request* header, /*char *params,*/ int sockfd);
 //TODO: rename io.h/.c to socket-io.c/.h, and create new files called HTTP-io.c/.h that
 //      will handle and abstract away receiving and sending HTTP requests/responses
 //TODO: Everytime you use write_file or write_message, make sure to error check
-//TODO: probably should create files "APIs.c" and APIs.h
 
 
 int main(int arg, char** argv){
@@ -121,8 +114,8 @@ int accept_connection(int lSock){
  * TODO: Make the buffer size dynamic instead of just 10k static bytes
  * TODO: split this into functions: Read request, determine response, do response
 */
-int process_request(int sockfd){
-    int n = 0;
+int read_and_process(int sockfd){
+    int n = 0, return_value;;
     char buf[DEFAULT_BUFFER_SIZE];
     bzero(buf, DEFAULT_BUFFER_SIZE);
 
@@ -131,14 +124,13 @@ int process_request(int sockfd){
     if (n < 0) error("error reading from socket");
     if (n == 0) return DISCONNECT_CODE;
     struct HTTP_request* header = parse_request(buf);
-    //TODO: if header == NULL, send back "invalid request" error
     fprintf(stderr, "request type is \"%s\"\n", header->type);
     fprintf(stderr, "request url is \"%s\"\n", header->url);
     fprintf(stderr, "request host is \"%s\"\n", header->host);
 
     write_request_to_file(buf, n);
 
-    send_response(header, /*char *params,*/ sockfd);
+    process_and_send_response(header, /*char *params,*/ sockfd);
    
     free_HTTP_request(header);
     return DISCONNECT_CODE;
@@ -154,47 +146,55 @@ int process_request(int sockfd){
 */
 //TODO: write a function for each possible HTTP request type: GET, POST, etc.
 //TODO: before sending out a response, should always have "write_header()" function
-void send_response(struct HTTP_request* header, /*char *params,*/ int sockfd){
+void process_and_send_response(struct HTTP_request* header, /*char *params,*/ int sockfd){
     if (header == NULL || header->type == NULL || header->url == NULL || header->host == NULL){
+
+        /*TODO: send_400_request(int sockfd);*/
         char *response = "improperly formatted request";
         fprintf(stderr, "%s\n", response);
         write_message(sockfd, response, strlen(response) + 1);
 
     }
-    if (strcmp(header->type, GET) == 0){
-        //edge case out index file
-        if (strcmp(header->url, "/") == 0 ){
-            //write_header();
-            fprintf(stderr, "wrote index file back\n");
-            write_file(sockfd, INDEX_FILE);
-            return;
-        }
 
-        //TODO: function this out to construct_filepath
-        int fpath_len = MAX_FNAME_SIZE + strlen(PUBLIC_FOLDER) + 1;
-        char filepath[fpath_len + 1];
-        bzero(filepath, fpath_len + 1);
-        strncpy(filepath, PUBLIC_FOLDER, strlen(PUBLIC_FOLDER));
+    if (strcmp(header->type, GET) == 0) process_GET_request(header, sockfd);
+    else if (strcmp(header->type, POST) == 0) process_POST_request(header, sockfd);
+    else if (strcmp(header->type, PUT) == 0) process_PUT_request(header, sockfd);
+    else if (strcmp(header->type, DELETE) == 0) process_DELETE_request(header, sockfd);
+    else send_400_error(sockfd);
 
-        //should always leave final byte of buffer as null byte
-        strncpy(&(filepath[strlen(PUBLIC_FOLDER)]), header->url, fpath_len - strlen(PUBLIC_FOLDER));
+    // if (strcmp(header->type, GET) == 0){
+    //     //edge case out index file
+    //     if (strcmp(header->url, "/") == 0 ){
+    //         //write_header();
+    //         fprintf(stderr, "wrote index file back\n");
+    //         write_file(sockfd, INDEX_FILE);
+    //         return DISCONNECT_CODE;
+    //     }
 
-        fprintf(stderr, "filepath is %s\n", filepath);
+    //     //TODO: function this out to construct_filepath
+    //     int fpath_len = MAX_FNAME_SIZE + strlen(PUBLIC_FOLDER) + 1;
+    //     char filepath[fpath_len + 1];
+    //     bzero(filepath, fpath_len + 1);
+    //     strncpy(filepath, PUBLIC_FOLDER, strlen(PUBLIC_FOLDER));
 
-        if( access( filepath, F_OK ) == -1 ){
+    //     //should always leave final byte of buffer as null byte
+    //     strncpy(&(filepath[strlen(PUBLIC_FOLDER)]), header->url, fpath_len - strlen(PUBLIC_FOLDER));
 
-            //TODO: replace this error message with a proper error response
-            fprintf(stderr, "wrote back 404 error\n" );
-            write_message(sockfd, "404", 4);
-            return;
-        } 
-        write_file(sockfd, filepath);
-        fprintf(stderr, "wrote back file %s\n", filepath );
-        return;
+    //     fprintf(stderr, "filepath is %s\n", filepath);
+
+    //     if( access( filepath, F_OK ) == -1 ){
+
+    //         //TODO: replace this error message with a proper error response
+    //         fprintf(stderr, "wrote back 404 error\n" );
+    //         write_message(sockfd, "404", 4);
+    //         return DISCONNECT_CODE;
+    //     } 
+    //     write_file(sockfd, filepath);
+    //     fprintf(stderr, "wrote back file %s\n", filepath );
+    //     return DISCONNECT_CODE;
         
 
-        //do stuff
-    }
+    // }
     //TODO: else if POST, PUT, DELETE
     
 }
