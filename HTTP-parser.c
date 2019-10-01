@@ -5,9 +5,9 @@
 
 void get_first_line (struct HTTP_request* header, char *buffer);
 void get_field(char **field, char *field_string, char *buffer);
-int  add_status( char *status, char **buf_ptr, int *buf_position, int buf_len);
-int  add_field(char *field_type, char* field_content, char **buf_ptr, int *buf_position, int buf_len);
-int  add_endl(char** buffer, int *buf_position, int buf_len);
+int  add_status( char *status, char **buf_ptr, unsigned *buf_position, int buf_len);
+int  add_field(char *field_type, char* field_content, char **buf_ptr, unsigned *buf_position, int buf_len);
+int  add_endl(char** buffer, unsigned *buf_position, int buf_len);
 
 //TODO: maybe make add_status and add_endl the same function with an arg for what to add
 
@@ -22,15 +22,17 @@ struct HTTP_request* parse_request(char* buffer){
 }
 int make_HTTP_response_header(struct HTTP_response response_header, char** buffer){
     *buffer = calloc(INITIAL_RESPONSE_LENGTH, 1);
-    int buf_position = 0;
+    unsigned buf_position = 0;
     int buf_len = INITIAL_RESPONSE_LENGTH;
     //edge case out adding first line, the stat
     buf_len = add_status(response_header.status, buffer, &buf_position, INITIAL_RESPONSE_LENGTH);
 
-    add_field("Server", response_header.server ,buffer,  &buf_position, buf_len);
-    /*add_field("something", response_header.some_field,buffer,  &buf_position, buf_len);
-    */
-    return add_endl(buffer, &buf_position, buf_len);
+    buf_len = add_field("Server", response_header.server ,buffer,  &buf_position, buf_len);
+    buf_len = add_field("Content-Length", response_header.content_length ,buffer,  &buf_position, buf_len);
+    buf_len = add_field("Date", response_header.date ,buffer,  &buf_position, buf_len);
+    buf_len = add_field("Content-Type", response_header.content_type ,buffer,  &buf_position, buf_len);
+    buf_len = add_endl(buffer, &buf_position, buf_len);
+    return buf_position;
 }
 
 void free_HTTP_request(struct HTTP_request* request){
@@ -53,16 +55,17 @@ void free_HTTP_request(struct HTTP_request* request){
  * Returns: The maximum length of the buffer, which will be equal to or greater
             than the argument buf_len
  */
-int  add_status( char *status, char **buf_ptr, int *buf_position, int buf_len){
+int  add_status( char *status, char **buf_ptr, unsigned *buf_position, int buf_len){
 
+    char* buffer = *buf_ptr;
     //if not enough space in the buffer, double its size
     if (strlen(status) > buf_len - *buf_position){
         *buf_ptr = realloc(*buf_ptr, buf_len * 2);
-        bzero(buf_ptr[buf_len], buf_len);
+        bzero(&(buffer[buf_len]), buf_len);
         buf_len = buf_len * 2;
     }
 
-    char* buffer = *buf_ptr;
+    
     strcpy(&(buffer[*buf_position]), status);
     *buf_position += strlen(status);
     return add_endl(buf_ptr, buf_position, buf_len);
@@ -81,17 +84,21 @@ int  add_status( char *status, char **buf_ptr, int *buf_position, int buf_len){
  * Returns: The maximum length of the buffer, which will be equal to or greater
             than the argument buf_len
  */
-int  add_field(char *field_type, char* field_content, char **buf_ptr, int *buf_position, int buf_len){
+int  add_field(char *field_type, char* field_content, char **buf_ptr, unsigned *buf_position, int buf_len){
     
+    //if the field_content is NULL or empty, don't add it
+    if (field_content == NULL || strcmp(field_content, "") == 0) return buf_len; 
+    //TODO: add an error logging for the above line
     char* seperator = ": ";
+    char* buffer = *buf_ptr;
+
     //if not enough space in the buffer, double its size
     if (strlen(field_type) + strlen(field_content) + strlen(seperator) > buf_len - *buf_position){
         *buf_ptr = realloc(*buf_ptr, buf_len * 2);
-        bzero(buf_ptr[buf_len], buf_len);
+        bzero(&(buffer[buf_len]), buf_len);
         buf_len = buf_len * 2;
     }
 
-    char* buffer = *buf_ptr;
     strcpy(&(buffer[*buf_position]), field_type);
     *buf_position += strlen(field_type);
     strcpy(&(buffer[*buf_position]), seperator);
@@ -115,19 +122,16 @@ int  add_field(char *field_type, char* field_content, char **buf_ptr, int *buf_p
             than the argument buf_len
  */
 
-int  add_endl(char** buf_ptr, int *buf_position, int buf_len){
+int  add_endl(char** buf_ptr, unsigned *buf_position, int buf_len){
 
+    char* buffer = *buf_ptr;
     if (strlen(HTTP_ENDL) > buf_len - *buf_position){
         *buf_ptr = realloc(*buf_ptr, buf_len * 2);
-        bzero(buf_ptr[buf_len], buf_len);
+        bzero(&(buffer[buf_len]), buf_len);
         buf_len = buf_len * 2;
     }
 
-    char* buffer = *buf_ptr;
-    fprintf(stderr, "in endl, the buffer is %s\n", buffer);
-    fprintf(stderr, "the *buf_position is %d\n", *buf_position);
-    fprintf(stderr, "the buf_len is %d\n", buf_len);
-
+    
     
     strcpy(&(buffer[*buf_position]), HTTP_ENDL);
     *buf_position += strlen(HTTP_ENDL);

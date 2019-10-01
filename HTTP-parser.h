@@ -29,6 +29,7 @@ struct HTTP_response{
     char *date;
     char *server;
     char *content_length; 
+    char *content_type;
 };
 
 

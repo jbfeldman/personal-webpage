@@ -17,7 +17,8 @@
 
 int accept_connection(int lSock);
 int read_and_process(int sockfd);
-void write_request_to_file(char* buf, int n);process_and_send_response(struct HTTP_request* header, /*char *params,*/ int sockfd);
+void write_request_to_file(char* buf, int n);
+void process_and_send_response(struct HTTP_request* header, /*char *params,*/ int sockfd);
 
 
 //TODO: function out all of the lines relevant to accepting a connection
@@ -70,7 +71,7 @@ int main(int arg, char** argv){
                     else{
                         fprintf(stderr, "message from existing connection\n" );
 
-                        status = process_request(sockfd);
+                        status = read_and_process(sockfd);
                         
 
                         if (status == DISCONNECT_CODE ){
@@ -115,7 +116,7 @@ int accept_connection(int lSock){
  * TODO: split this into functions: Read request, determine response, do response
 */
 int read_and_process(int sockfd){
-    int n = 0, return_value;;
+    int n = 0;
     char buf[DEFAULT_BUFFER_SIZE];
     bzero(buf, DEFAULT_BUFFER_SIZE);
 
@@ -156,12 +157,12 @@ void process_and_send_response(struct HTTP_request* header, /*char *params,*/ in
 
     }
 
-    if (strcmp(header->type, GET) == 0) process_GET_request(header, sockfd);
-    else if (strcmp(header->type, POST) == 0) process_POST_request(header, sockfd);
-    else if (strcmp(header->type, PUT) == 0) process_PUT_request(header, sockfd);
-    else if (strcmp(header->type, DELETE) == 0) process_DELETE_request(header, sockfd);
-    else send_400_error(sockfd);
-
+    if (strcmp(header->type, "GET") == 0) process_GET_request(header, sockfd);
+    // else if (strcmp(header->type, "POST") == 0) process_POST_request(header, sockfd);
+    // else if (strcmp(header->type, "PUT") == 0) process_PUT_request(header, sockfd);
+    // else if (strcmp(header->type, "DELETE") == 0) process_DELETE_request(header, sockfd);
+    else send_404_error(sockfd); //TODO: change to 404
+ 
     // if (strcmp(header->type, GET) == 0){
     //     //edge case out index file
     //     if (strcmp(header->url, "/") == 0 ){
