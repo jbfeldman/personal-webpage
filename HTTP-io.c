@@ -6,11 +6,12 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <strings.h>
+#include <time.h>
 
 #include "HTTP-io.h"
 #define MAX_FNAME_SIZE 100
 #define MAX_DIGITS 21
-
+#define MAX_DATE_SIZE 100
 
 #define PUBLIC_FOLDER "public"
 #define INDEX_FILE "public/index.html"
@@ -18,7 +19,7 @@
 
 
 
-
+void create_HTTP_date(char* date_buffer);
 void serve_static_content(char *url, int sockfd, struct HTTP_response response);
 void serve_dynamic_content(char* buffer, int n, int sockfd);
 void construct_filepath(char* fpath, int fpath_len, char* folder, char* url);
@@ -27,18 +28,21 @@ unsigned long get_file_length(char* fname);
 
 void process_GET_request(struct HTTP_request* header, int sockfd){
 
-    //TODO: maybe function this out to "initialize response"
     char con_len_buffer[MAX_DIGITS];
     bzero(con_len_buffer, MAX_DIGITS);
+    char date_buffer[MAX_DATE_SIZE];
+    bzero(date_buffer, MAX_DATE_SIZE);
 
      struct HTTP_response response = 
     {
         .status = "HTTP/1.1 200 OK",
-        .date = "Today", //TODO: Change this to a get_date() funcion
+        .date = date_buffer, //TODO: Change this to a get_date() funcion
         .server = SERVER_NAME,
         .content_length = con_len_buffer, 
         .content_type = "text/html"
     };
+
+    create_HTTP_date(date_buffer);
 
     /*IMPORTANT! For every API endpoint that is not serve_static_content, the field content_length must be set*/
     //if requesting index file
@@ -153,4 +157,17 @@ unsigned long get_file_length(char* fname){
     rewind(fp);
     fclose(fp);
     return filelen;
+}
+
+/*
+ * Purpose: creates an HTTP-compliant date of the current moment
+ *          and loads it into date_buffer
+ * Args: An array of MAX_DATE_SIZE bytes loaded with null bytes
+ */
+void create_HTTP_date(char* date_buffer){
+
+    time_t now = time(0);
+    struct tm tm = *gmtime(&now);
+    strftime(date_buffer, MAX_DATE_SIZE, "%a, %d %b %Y %H:%M:%S %Z", &tm);
+
 }
