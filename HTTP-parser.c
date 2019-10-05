@@ -183,16 +183,15 @@ void get_first_line (struct HTTP_request* header, char *buffer){
  */
 
 //TODO: if any of the if statements are triggered, probably should be an error logged instead of just setting it to NULL
+//TODO: if there's an error, maybe have it write an error message and have it return up the stack
 void get_field(char **field, char *field_string, char *buffer){
     char* start_of_line = strstr(buffer, field_string);
-
-
+    //if field does not exist
     if (start_of_line == NULL){
         *field = NULL;
         return;
     } 
-    // char* end_of_line = strstr(start_of_line, "\r\n");
-    // if (end_of_line == NULL) return NULL;
+
     if (strstr(start_of_line, "\r\n") == NULL){
         *field = NULL;
         return;
@@ -201,27 +200,23 @@ void get_field(char **field, char *field_string, char *buffer){
     int line_length = strstr(start_of_line, "\n") - start_of_line;
 
     //create seperate buffer so strtok doesn't malform header string
-
     char line_buffer[line_length];
     char *temp;
     bzero(line_buffer, line_length);
     strncpy(line_buffer, start_of_line, line_length);
+
     // fprintf(stderr, "start of line is %s\n", start_of_line);
     // fprintf(stderr, "line buffer is %s\n", line_buffer);
     // fprintf(stderr, "line length is %d\n", line_length);
 
     temp = strtok(line_buffer, " ");
-    // fprintf(stderr, "temp is %s\n", temp);
     if (temp == NULL){
-        // fprintf(stderr, "got set to null bc strtok(line_buffer, \" \") was null\n");
         *field = NULL;
         return;
     }
     temp = strtok(NULL, "\r");
-    // fprintf(stderr, "temp is %s\n", temp);
 
     if (temp == NULL){
-        // fprintf(stderr, "got set to null bc strtok(line_buffer, \"r\") was null\n");
         *field = NULL;
         return;
     }
