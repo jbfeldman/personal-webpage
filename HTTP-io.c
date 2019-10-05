@@ -101,9 +101,27 @@ void construct_filepath(char* fpath, int fpath_len, char* folder, char* url ){
 }
 
 void send_404_error(int sockfd){
-    char* message = "HTTP/1.1 404\r\n\r\n";
+    char* message = "HTTP/1.1 404 Not Found\r\n\r\n";
     write_message(sockfd, message, strlen(message));
 }
+
+void send_403_error(int sockfd){
+    char* message = "HTTP/1.1 403 Forbidden\r\n\r\n";
+    write_message(sockfd, message, strlen(message));
+}
+
+void send_401_error(int sockfd){
+    char* message = "HTTP/1.1 401 Unauthorized\r\n\r\n";
+    write_message(sockfd, message, strlen(message));
+}
+
+void send_400_error(int sockfd){
+    char* message = "HTTP/1.1 400 Bad Request\r\n\r\n";
+    write_message(sockfd, message, strlen(message));
+}
+
+
+
 
 /*
  * Purpose: write an HTTP response header to the client

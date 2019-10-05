@@ -9,9 +9,9 @@
  * Args: the socket file descriptor of the client socket
  *
  */
-// void send_400_error(int sockfd);
-// void send_401_error(int sockfd);
-// void send_403_error(int sockfd);
+void send_400_error(int sockfd);
+void send_401_error(int sockfd);
+void send_403_error(int sockfd);
 void send_404_error(int sockfd);
 
 void process_GET_request(struct HTTP_request* header, int sockfd);
