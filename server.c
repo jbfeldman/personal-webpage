@@ -20,12 +20,6 @@ int read_and_process(int sockfd);
 void write_request_to_file(char* buf, int n);
 void process_and_send_response(struct HTTP_request* header, /*char *params,*/ int sockfd);
 
-
-//TODO: function out all of the lines relevant to accepting a connection
-    // TODO: open index.html
-    // TODO: write line by line
-//TODO: rename io.h/.c to socket-io.c/.h, and create new files called HTTP-io.c/.h that
-//      will handle and abstract away receiving and sending HTTP requests/responses
 //TODO: Everytime you use write_file or write_message, make sure to error check
 
 
@@ -145,8 +139,6 @@ int read_and_process(int sockfd){
  *       params (TODO: not yet implemented): the HTTP paramaters for 
  *       sockfd: socket file descriptor that will be used to write to client
 */
-//TODO: write a function for each possible HTTP request type: GET, POST, etc.
-//TODO: before sending out a response, should always have "write_header()" function
 void process_and_send_response(struct HTTP_request* header, /*char *params,*/ int sockfd){
     if (header == NULL || header->type == NULL || header->url == NULL || header->host == NULL){
 
@@ -163,40 +155,6 @@ void process_and_send_response(struct HTTP_request* header, /*char *params,*/ in
     // else if (strcmp(header->type, "DELETE") == 0) process_DELETE_request(header, sockfd);
     else send_404_error(sockfd); //TODO: change to 404
  
-    // if (strcmp(header->type, GET) == 0){
-    //     //edge case out index file
-    //     if (strcmp(header->url, "/") == 0 ){
-    //         //write_header();
-    //         fprintf(stderr, "wrote index file back\n");
-    //         write_file(sockfd, INDEX_FILE);
-    //         return DISCONNECT_CODE;
-    //     }
-
-    //     //TODO: function this out to construct_filepath
-    //     int fpath_len = MAX_FNAME_SIZE + strlen(PUBLIC_FOLDER) + 1;
-    //     char filepath[fpath_len + 1];
-    //     bzero(filepath, fpath_len + 1);
-    //     strncpy(filepath, PUBLIC_FOLDER, strlen(PUBLIC_FOLDER));
-
-    //     //should always leave final byte of buffer as null byte
-    //     strncpy(&(filepath[strlen(PUBLIC_FOLDER)]), header->url, fpath_len - strlen(PUBLIC_FOLDER));
-
-    //     fprintf(stderr, "filepath is %s\n", filepath);
-
-    //     if( access( filepath, F_OK ) == -1 ){
-
-    //         //TODO: replace this error message with a proper error response
-    //         fprintf(stderr, "wrote back 404 error\n" );
-    //         write_message(sockfd, "404", 4);
-    //         return DISCONNECT_CODE;
-    //     } 
-    //     write_file(sockfd, filepath);
-    //     fprintf(stderr, "wrote back file %s\n", filepath );
-    //     return DISCONNECT_CODE;
-        
-
-    // }
-    //TODO: else if POST, PUT, DELETE
     
 }
 /*

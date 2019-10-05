@@ -27,6 +27,7 @@ unsigned long get_file_length(char* fname);
 
 void process_GET_request(struct HTTP_request* header, int sockfd){
 
+    //TODO: maybe function this out to "initialize response"
     char con_len_buffer[MAX_DIGITS];
     bzero(con_len_buffer, MAX_DIGITS);
 
