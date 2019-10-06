@@ -20,7 +20,13 @@ int read_and_process(int sockfd);
 void write_request_to_file(char* buf, int n);
 void process_and_send_response(struct HTTP_request* header, /*char *params,*/ int sockfd);
 
-//TODO: Everytime you use write_file or write_message, make sure to error check
+/*************************TODOs***********************************
+TODO: Everytime you use write_file or write_message, make sure to error check
+TODO: filter out any content that has directory traversal
+      -probably should ban out any special characters besides dash: not sure which module is most appropiate for thiss
+      Similar TODO: need to return a correct response code for malformed header information
+
+***********************************************************/
 
 
 int main(int arg, char** argv){
@@ -153,7 +159,7 @@ void process_and_send_response(struct HTTP_request* header, /*char *params,*/ in
     // else if (strcmp(header->type, "POST") == 0) process_POST_request(header, sockfd);
     // else if (strcmp(header->type, "PUT") == 0) process_PUT_request(header, sockfd);
     // else if (strcmp(header->type, "DELETE") == 0) process_DELETE_request(header, sockfd);
-    else send_404_error(sockfd); //TODO: change to 404
+    else send_404_error(sockfd); 
  
     
 }

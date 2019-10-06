@@ -25,7 +25,6 @@ void serve_dynamic_content(char* buffer, int n, int sockfd);
 void construct_filepath(char* fpath, int fpath_len, char* folder, char* url);
 void write_response_header(int sockfd, struct HTTP_response header);
 unsigned long get_file_length(char* fname);
-
 void process_GET_request(struct HTTP_request* header, int sockfd){
 
     char con_len_buffer[MAX_DIGITS];
@@ -36,7 +35,7 @@ void process_GET_request(struct HTTP_request* header, int sockfd){
      struct HTTP_response response = 
     {
         .status = "HTTP/1.1 200 OK",
-        .date = date_buffer, //TODO: Change this to a get_date() funcion
+        .date = date_buffer, 
         .server = SERVER_NAME,
         .content_length = con_len_buffer, 
         .content_type = "text/html"
