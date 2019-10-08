@@ -10,8 +10,7 @@
 
 #include "HTTP-io.h"
 #define MAX_FNAME_SIZE 100
-#define MAX_DIGITS 21
-#define MAX_DATE_SIZE 100
+#define MAX_FIELD_SIZE 100
 
 #define PUBLIC_FOLDER "public"
 #define INDEX_FILE "public/index.html"
@@ -25,12 +24,19 @@ void serve_dynamic_content(char* buffer, int n, int sockfd);
 void construct_filepath(char* fpath, int fpath_len, char* folder, char* url);
 void write_response_header(int sockfd, struct HTTP_response header);
 unsigned long get_file_length(char* fname);
+void determine_content_type(char *content_type_buffer, char *filename);
+
+
 void process_GET_request(struct HTTP_request* header, int sockfd){
 
-    char con_len_buffer[MAX_DIGITS];
-    bzero(con_len_buffer, MAX_DIGITS);
-    char date_buffer[MAX_DATE_SIZE];
-    bzero(date_buffer, MAX_DATE_SIZE);
+    //TODO: this is ugly, probably just going to have to bite the bullet and use malloced strings then deal with the memory issues 
+    char con_len_buffer[MAX_FIELD_SIZE];
+    bzero(con_len_buffer, MAX_FIELD_SIZE);
+    char date_buffer[MAX_FIELD_SIZE];
+    bzero(date_buffer, MAX_FIELD_SIZE);
+    char content_type_buffer[MAX_FIELD_SIZE];
+    bzero(content_type_buffer, MAX_FIELD_SIZE);
+    strcpy(content_type_buffer, "text/html");
 
      struct HTTP_response response = 
     {
@@ -38,12 +44,14 @@ void process_GET_request(struct HTTP_request* header, int sockfd){
         .date = date_buffer, 
         .server = SERVER_NAME,
         .content_length = con_len_buffer, 
-        .content_type = "text/html"
+        .content_type = content_type_buffer
     };
 
     create_HTTP_date(date_buffer);
 
     /*IMPORTANT! For every API endpoint that is not serve_static_content, the field content_length must be set*/
+    /* IMPORTANT! If returning content that is NOT html, content_type field must be set to the correct type */
+
     //if requesting index file
     if (strcmp(header->url, "/") == 0){
 
@@ -56,6 +64,8 @@ void process_GET_request(struct HTTP_request* header, int sockfd){
         serve_static_content(header->url, sockfd, response);
     }
 }
+
+
 
 /*
  * Purpose: Writes an HTTP header and html file to the client.  If the file does
@@ -76,6 +86,8 @@ void serve_static_content(char *url, int sockfd, struct HTTP_response response){
         send_404_error(sockfd);
         return;
     }
+
+    determine_content_type(response.content_type, filepath);
 
     sprintf(response.content_length, "%lu", get_file_length(filepath));
    
@@ -161,12 +173,62 @@ unsigned long get_file_length(char* fname){
 /*
  * Purpose: creates an HTTP-compliant date of the current moment
  *          and loads it into date_buffer
- * Args: An array of MAX_DATE_SIZE bytes loaded with null bytes
+ * Args: An array of MAX_FIELD_SIZE bytes loaded with null bytes
  */
 void create_HTTP_date(char* date_buffer){
 
     time_t now = time(0);
     struct tm tm = *gmtime(&now);
-    strftime(date_buffer, MAX_DATE_SIZE, "%a, %d %b %Y %H:%M:%S %Z", &tm);
+    strftime(date_buffer, MAX_FIELD_SIZE, "%a, %d %b %Y %H:%M:%S %Z", &tm);
+
+}
+
+
+/*
+ * Purpose: determines the correct MIME content-type from a given filename.
+ *          Will fail if filename does not exist or either arg is NULL
+ * Args: 
+ *     content_type_buffer: the buffer the content-type will be loaded onto. Should
+ *                         be alloc'd or stack'd to at least MAX_FIELD_SIZE
+ *      filename: the filename we'll be determining content-type of 
+ *
+ * 
+ */
+void determine_content_type(char *content_type_buffer, char* filename){
+
+    char *file_extension = strstr(filename, ".");
+    if (file_extension == NULL) return;
+
+    bzero(content_type_buffer, MAX_FIELD_SIZE);
+
+    //Gets content_type from file_extension. Still a whoooooole lot more to add
+    if (strcmp(file_extension, ".html") == 0){
+        strncpy(content_type_buffer, "text/html", MAX_FIELD_SIZE);
+        return;
+    }
+    else if (strcmp(file_extension, ".css") == 0 || strcmp(file_extension, ".css.map") == 0 || strcmp(file_extension, "cscc") == 0){
+        strncpy(content_type_buffer, "text/css", MAX_FIELD_SIZE);
+        return;
+    }
+    else if (strcmp(file_extension, ".svg") == 0){
+        strncpy(content_type_buffer, "image/svg+xml", MAX_FIELD_SIZE);
+        return;
+    }
+    else if (strcmp(file_extension, ".xml") == 0){
+        strncpy(content_type_buffer, "text/xml", MAX_FIELD_SIZE);
+        return;
+    }
+
+    else{
+        strncpy(content_type_buffer, "application/octet-stream", MAX_FIELD_SIZE);
+        return; 
+    }
+
+    //HTML
+    //CSS
+    //XML
+    //css.map
+    //svg  
+    //cscc
 
 }
