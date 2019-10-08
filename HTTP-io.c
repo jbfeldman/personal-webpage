@@ -7,6 +7,9 @@
 #include <arpa/inet.h>
 #include <strings.h>
 #include <time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
 
 #include "HTTP-io.h"
 #define MAX_FNAME_SIZE 100
@@ -25,6 +28,7 @@ void construct_filepath(char* fpath, int fpath_len, char* folder, char* url);
 void write_response_header(int sockfd, struct HTTP_response header);
 unsigned long get_file_length(char* fname);
 void determine_content_type(char *content_type_buffer, char *filename);
+char file_exists(char *filename);
 
 
 void process_GET_request(struct HTTP_request* header, int sockfd){
@@ -82,7 +86,7 @@ void serve_static_content(char *url, int sockfd, struct HTTP_response response){
     construct_filepath(filepath, fpath_len, PUBLIC_FOLDER, url);
 
     //if requested file does not exist
-    if( access( filepath, F_OK ) == -1 ){
+    if (!file_exists(filepath)){
         send_404_error(sockfd);
         return;
     }
@@ -117,6 +121,7 @@ void construct_filepath(char* fpath, int fpath_len, char* folder, char* url ){
 }
 
 void send_404_error(int sockfd){
+    fprintf(stderr, "wrote back 404 error\n");
     char* message = "HTTP/1.1 404 Not Found\r\n\r\n";
     write_message(sockfd, message, strlen(message));
 }
@@ -224,11 +229,19 @@ void determine_content_type(char *content_type_buffer, char* filename){
         return; 
     }
 
-    //HTML
-    //CSS
-    //XML
-    //css.map
-    //svg  
-    //cscc
+}
+/* Purpose: determines if a given file exists
+ * Args: the filename in question
+ * Returns: 0 if file does not exist, 1 if it does
+ */
+
+char file_exists(char* filename){
+
+    //If file OR directory by that name does not exist
+    struct stat path_stat;
+    stat(filename, &path_stat);
+    return S_ISREG(path_stat.st_mode);
+
+
 
 }
