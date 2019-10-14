@@ -18,6 +18,7 @@
 #define PUBLIC_FOLDER "public"
 #define INDEX_FILE "public/index.html"
 #define SERVER_NAME "Jonah's custom server"
+#define ERROR_404_PAGE "public/404.html" 
 
 
 
@@ -124,6 +125,7 @@ void send_404_error(int sockfd){
     fprintf(stderr, "wrote back 404 error\n");
     char* message = "HTTP/1.1 404 Not Found\r\n\r\n";
     write_message(sockfd, message, strlen(message));
+    write_file(sockfd, ERROR_404_PAGE);
 }
 
 void send_403_error(int sockfd){
@@ -224,6 +226,7 @@ void determine_content_type(char *content_type_buffer, char* filename){
         return;
     }
 
+    //if unable to identify file type, default to octet-stream
     else{
         strncpy(content_type_buffer, "application/octet-stream", MAX_FIELD_SIZE);
         return; 
