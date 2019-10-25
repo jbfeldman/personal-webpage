@@ -61,6 +61,7 @@ int  add_status( char *status, char **buf_ptr, unsigned *buf_position, int buf_l
     //if not enough space in the buffer, double its size
     if (strlen(status) > buf_len - *buf_position){
         *buf_ptr = realloc(*buf_ptr, buf_len * 2);
+        buffer = *buf_ptr;
         bzero(&(buffer[buf_len]), buf_len);
         buf_len = buf_len * 2;
     }
@@ -95,6 +96,7 @@ int  add_field(char *field_type, char* field_content, char **buf_ptr, unsigned *
     //if not enough space in the buffer, double its size
     if (strlen(field_type) + strlen(field_content) + strlen(seperator) > buf_len - *buf_position){
         *buf_ptr = realloc(*buf_ptr, buf_len * 2);
+        buffer = *buf_ptr;
         bzero(&(buffer[buf_len]), buf_len);
         buf_len = buf_len * 2;
     }
@@ -127,6 +129,7 @@ int  add_endl(char** buf_ptr, unsigned *buf_position, int buf_len){
     char* buffer = *buf_ptr;
     if (strlen(HTTP_ENDL) > buf_len - *buf_position){
         *buf_ptr = realloc(*buf_ptr, buf_len * 2);
+        buffer = *buf_ptr;
         bzero(&(buffer[buf_len]), buf_len);
         buf_len = buf_len * 2;
     }
