@@ -7,24 +7,26 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h> 
-#include "io.h"
+#include "HTTP-io.h"
 
 #define DEFAULT_PORT_NO 80
 #define DISCONNECT_CODE -69
 #define DEFAULT_BUFFER_SIZE 10000
 #define REQUEST_LOG "logging/request-log.txt"
 #define ERROR_LOG "logging/error-log.txt"
-#define INDEX_FILE "public/index.html"
 
-void write_response(/*char* fname,*/ int socket);
 int accept_connection(int lSock);
-int process_request(int sockfd);
+int read_and_process(int sockfd);
 void write_request_to_file(char* buf, int n);
+void process_and_send_response(struct HTTP_request* header, /*char *params,*/ int sockfd);
 
+/*************************TODOs***********************************
+TODO: Everytime you use write_file or write_message, make sure to error check
+TODO: filter out any content that has directory traversal
+      -probably should ban out any special characters besides dash: not sure which module is most appropiate for thiss
+      Similar TODO: need to return a correct response code for malformed header information
 
-//TODO: function out all of the lines relevant to accepting a connection
-    // TODO: open index.html
-    // TODO: write line by line
+***********************************************************/
 
 
 int main(int arg, char** argv){
@@ -69,11 +71,12 @@ int main(int arg, char** argv){
                     else{
                         fprintf(stderr, "message from existing connection\n" );
 
-                        status = process_request(sockfd);
+                        status = read_and_process(sockfd);
                         
 
                         if (status == DISCONNECT_CODE ){
                             //TODO: write a disconnect function
+                            fprintf(stderr, "disconnecting client\n" );
                             close(sockfd);
                             FD_CLR(sockfd, &masterFDSet);
                             
@@ -92,22 +95,6 @@ int main(int arg, char** argv){
 
 }
 
-
-/* Purpose: writes the response to the client, will need major reworking
- * Args: fname of the file to be returned, and socket file descriptor to write to
- */
-
-void write_response(/*char* fname,*/int socket){
-    char *response = "This is the sample response string, here ye here ye";
-    int n = write(socket, response, strlen(response));
-    if (n < 0){
-        error("error writing to socket");
-    }
-    else{
-        fprintf(stderr, "wrote message of %d bytes\n", n);
-    }
-
-}
 
 /* Purpose: To accept an incoming connection from a new client
  * Args: listening socket file descriptor
@@ -128,7 +115,7 @@ int accept_connection(int lSock){
  * TODO: Make the buffer size dynamic instead of just 10k static bytes
  * TODO: split this into functions: Read request, determine response, do response
 */
-int process_request(int sockfd){
+int read_and_process(int sockfd){
     int n = 0;
     char buf[DEFAULT_BUFFER_SIZE];
     bzero(buf, DEFAULT_BUFFER_SIZE);
@@ -136,15 +123,46 @@ int process_request(int sockfd){
     n = read (sockfd, buf, DEFAULT_BUFFER_SIZE);
     fprintf(stderr, "%d bytes read from client\n", n);
     if (n < 0) error("error reading from socket");
+    if (n == 0) return DISCONNECT_CODE;
+    struct HTTP_request* header = parse_request(buf);
+    fprintf(stderr, "request type is \"%s\"\n", header->type);
+    fprintf(stderr, "request url is \"%s\"\n", header->url);
+    fprintf(stderr, "request host is \"%s\"\n", header->host);
 
     write_request_to_file(buf, n);
 
+    process_and_send_response(header, /*char *params,*/ sockfd);
    
-
-    write_file(sockfd, INDEX_FILE);
+    free_HTTP_request(header);
     return DISCONNECT_CODE;
 }
 
+/* 
+ * Purpose: determines what type of response is appropiate for given request and
+ *          sends that response
+ *  Args: 
+ *       header: the HTTP header struct
+ *       params (TODO: not yet implemented): the HTTP paramaters for 
+ *       sockfd: socket file descriptor that will be used to write to client
+*/
+void process_and_send_response(struct HTTP_request* header, /*char *params,*/ int sockfd){
+    if (header == NULL || header->type == NULL || header->url == NULL || header->host == NULL){
+
+        /*TODO: send_400_request(int sockfd);*/
+        char *response = "improperly formatted request";
+        fprintf(stderr, "%s\n", response);
+        write_message(sockfd, response, strlen(response) + 1);
+
+    }
+
+    if (strcmp(header->type, "GET") == 0) process_GET_request(header, sockfd);
+    // else if (strcmp(header->type, "POST") == 0) process_POST_request(header, sockfd);
+    // else if (strcmp(header->type, "PUT") == 0) process_PUT_request(header, sockfd);
+    // else if (strcmp(header->type, "DELETE") == 0) process_DELETE_request(header, sockfd);
+    else send_404_error(sockfd); 
+ 
+    
+}
 /*
  * Purpose: Writes the request (usually HTTP) from server to a file
  * Args: The buffer containing the message and its length

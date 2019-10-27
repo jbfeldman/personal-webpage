@@ -1,1 +1,1 @@
-gcc server.c io.c -g -Wall -Wextra -o server
+gcc server.c HTTP-io.c socket-io.c HTTP-parser.c -g -Wall -Wextra -o server

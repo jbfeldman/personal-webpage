@@ -10,8 +10,28 @@
 #include <string.h>
 #include <errno.h>
 
-struct HTTP_request;
-struct HTTP_response;
+// struct HTTP_request;
+// struct HTTP_response;
+
+struct HTTP_request{
+
+    char *type; //GET, POST, PULL, etc
+    char *url; //relative URL path
+    char *host;
+    /*char* conncetion;
+    char *cache_control;
+    char *user_agent; 
+    char* data; //for the body if we migrate to post requests*/
+
+};
+struct HTTP_response{
+    char *status;
+    char *date;
+    char *server;
+    char *content_length; 
+    char *content_type;
+};
+
 
 
 /*
@@ -19,7 +39,7 @@ struct HTTP_response;
  * Args: Buffer containing the request, and the length of the request
  * Returns: a struct containing the HTTP-request information
  */
-struct HTTP_request parse_request(char* buffer, int n);
+struct HTTP_request* parse_request(char* buffer);
 
 /*
  * Purpose: creates an HTTP response string from an HTTP_response struct
@@ -28,4 +48,10 @@ struct HTTP_request parse_request(char* buffer, int n);
  *      buffer: a pointer to the C-String that will contain the ALLOCATED HTTP_response string
  *Returns: the length of the HTTP response string
  */
-int formulate_resposne (struct HTTP_response, char** buffer);
+int make_HTTP_response_header(struct HTTP_response response_header, char** buffer);
+
+/* 
+ * frees HTTP_request header struct pointer
+ *
+ */
+void free_HTTP_request(struct HTTP_request* request);

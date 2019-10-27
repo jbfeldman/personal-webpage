@@ -69,6 +69,7 @@ int write_message(int csock, char *data, int length) {
     return 0;
 }
 
+
 int write_file(int csock, char *filename) {
     FILE *fp = fopen(filename, "rb");
     char bytes[FILE_BUFFER_MAX_LEN];
