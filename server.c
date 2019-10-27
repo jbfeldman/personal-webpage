@@ -25,6 +25,7 @@ TODO: Everytime you use write_file or write_message, make sure to error check
 TODO: filter out any content that has directory traversal
       -probably should ban out any special characters besides dash: not sure which module is most appropiate for thiss
       Similar TODO: need to return a correct response code for malformed header information
+TODO: Have request log errro message printing out print out the fucking correct error message
 
 ***********************************************************/
 
