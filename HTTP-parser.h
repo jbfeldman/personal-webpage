@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <strings.h>
 
 // struct HTTP_request;
 // struct HTTP_response;
