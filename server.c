@@ -9,6 +9,7 @@
 #include <netdb.h> 
 #include "HTTP-io.h"
 #include <sys/select.h>
+#include <logging.h>
 
 #define DEFAULT_PORT_NO 80
 #define DISCONNECT_CODE -69

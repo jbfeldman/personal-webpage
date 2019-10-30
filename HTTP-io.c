@@ -12,6 +12,7 @@
 
 
 #include "HTTP-io.h"
+#include "logging.h"
 #define MAX_FNAME_SIZE 100
 #define MAX_FIELD_SIZE 100
 
@@ -22,7 +23,6 @@
 
 
 
-void create_HTTP_date(char* date_buffer);
 void serve_static_content(char *url, int sockfd, struct HTTP_response response);
 void serve_dynamic_content(char* buffer, int n, int sockfd);
 void construct_filepath(char* fpath, int fpath_len, char* folder, char* url);
@@ -52,7 +52,7 @@ void process_GET_request(struct HTTP_request* header, int sockfd){
         .content_type = content_type_buffer
     };
 
-    create_HTTP_date(date_buffer);
+    format_date(date_buffer);
 
     /*IMPORTANT! For every API endpoint that is not serve_static_content, the field content_length must be set*/
     /* IMPORTANT! If returning content that is NOT html, content_type field must be set to the correct type */
@@ -177,18 +177,6 @@ unsigned long get_file_length(char* fname){
     return filelen;
 }
 
-/*
- * Purpose: creates an HTTP-compliant date of the current moment
- *          and loads it into date_buffer
- * Args: An array of MAX_FIELD_SIZE bytes loaded with null bytes
- */
-void create_HTTP_date(char* date_buffer){
-
-    time_t now = time(0);
-    struct tm tm = *gmtime(&now);
-    strftime(date_buffer, MAX_FIELD_SIZE, "%a, %d %b %Y %H:%M:%S %Z", &tm);
-
-}
 
 
 /*
