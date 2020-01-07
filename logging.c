@@ -31,7 +31,8 @@ void log_error(int sockfd, char* error){
     find_client_ip(sockfd, ip_buffer);
     format_date(date_buffer)
     //TODO: get and format DATE
-    fprintf(fp, "Error \"%s\" was encountered when interacting with client %s\n", error, ip_buffer );
+    fprintf(fp, "%s\nError \"%s\" was encountered when interacting with client %s\n", date_buffer, error, ip_buffer );
+    fclose(fp);
 
 }
 void log_request(int sockfd, char* request);
